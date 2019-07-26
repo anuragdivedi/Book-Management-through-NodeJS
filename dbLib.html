@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Database</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js">
+	</script>
+	<style>
+		table, th, td {
+			margin-left:auto;
+			margin-right:auto;
+			padding: 5px;
+			border: 3px solid grey;
+			border-collapse: collapse;
+		}
+		body {
+			text-align: center;
+			font-family: courier new;
+			color: grey;
+		}
+		input {
+			border: 1px solid lightgrey;
+		}
+		b {
+			font-weight: 800;
+		}
+
+		.booklist {
+			margin-top: 20px;
+			margin-left: 20%;
+			margin-right:20%;
+			text-align: center;
+			
+		}
+		
+		input[type=button] {
+			border: none;
+			padding: 5px 10px;
+		}
+		input[type=button]:hover {
+			opacity:0.7;
+		}
+		
+		.topnav {
+			background-color: grey;
+		  	overflow: hidden;
+		}
+
+		.topnav a {
+			float: left;
+			color: #f2f2f2;
+			text-align: center;
+			padding: 14px 16px;
+			text-decoration: none;
+			font-size: 17px;
+		}
+
+		.topnav a:hover {
+  			background-color: #ddd;
+  			color: black;
+		}
+
+		.topnav a.active {
+  			background-color: black;
+  			color: white;
+		}
+		
+	</style>
+</head>
+
+<body>
+	<div ng-app="libraryApp" ng-controller="libCont">
+		<div class="topnav">
+			<a class="active" href="#home">Home</a>
+			<a href="#booklist">Book List</a>
+			<a href="#borrow">Borrow</a>
+			<a href="#return">Return</a>
+			<a href="#view">View Your List</a>
+			<a href="#contact">Contact</a>
+		</div>
+		
+		
+			<div class="booklist">
+
+			<b>Search : </b><input type="text" ng-model="search">
+			<br><br>
+			<table>
+				<tr>
+					
+					<th>Book Name</th>
+					<th>Book Author</th>
+					<th>Checkbox</th>
+				</tr>
+				<tr ng-repeat = "books in bookList | filter : search">
+					
+					<td>{{books.name}}</td>
+					<td>{{books.author}}</td>
+					<td><input type="checkbox" ng-model="books.check"></td>
+				</tr>
+			</table>
+		</div>
+		<br><br><br>
+		<div class="borrow" id="borrow">
+			<b>Borrow books:</b><br><br>
+			Add the selected books from the Library Book List to your list?<br><br>
+			<input type="button" ng-model="add" ng-click="add()" value="Add">
+		</div>
+		<br><br><br>
+		<div class="return" id="return">
+			<b>Return books:</b><br><br>
+			Return the selected books from your book list?<br><br>
+			<input type="button" ng-model="remove" ng-click="remove()" value="Remove">
+		</div>
+			<br><br><br>
+		<div class="view" id="view">
+			<b>View your book list:</b><br><br>
+			<input type="button" ng-model="view" ng-click="view()" value="Refresh"><br><br>
+			<div class="userbooks" ng-show="userListIsVisible">
+				
+				<table>
+					<tr>
+						
+						<th>Book Name</th>
+						<th>Book Author</th>
+						<th>Checkbox</th>
+					</tr>
+					<tr ng-repeat = "userbooks in userbookList">
+						
+						<td>{{userbooks.name}}</td>
+						<td>{{userbooks.author}}</td>
+						<td><input type="checkbox" ng-model="userbooks.check"></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+
+	</div>
+	
+	<script>
+		var app = angular.module("libraryApp", []);
+		app.controller("libCont", function($scope, $http) {
+			$scope.userListIsVisible=false;
+			$http.get("/booklist").then(function(response) 	//shows current booklist
+				{
+					$scope.bookList = response.data;
+				});
+
+			$scope.add = function() {		//adds items to users list
+				for (var i = 0; i < $scope.bookList.length; i++) {
+                    if ($scope.bookList[i].check) {
+                        $http.post("/userbooks", { name: $scope.bookList[i].name, author: $scope.bookList[i].author});
+                    }
+                }
+			}
+
+			$scope.remove = function() {	//removes items from users list
+				for(var i=0;i < $scope.userbookList.length; i++) {
+					if($scope.userbookList[i].check) {
+						$http.post("/userbooksrem", { name: $scope.userbookList[i].name, author: $scope.userbookList[i].author});
+					}
+				}
+			}
+
+			$scope.view = function() {	//to view users list
+				$scope.userListIsVisible = true;
+				$http.get("/userbooks").then(function(response) {
+					$scope.userbookList = response.data;
+				});
+			}
+		});
+	</script>
+</body>
+</html>
